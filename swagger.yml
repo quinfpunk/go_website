@@ -1,0 +1,285 @@
+openapi: 3.0.3
+info:
+  title: NOVA Headphones API
+  description: |
+    REST API for the NOVA wireless headphones product website.
+    This API serves product information, specifications, features, and handles contact form submissions.
+  version: 1.0.0
+  contact:
+    name: NOVA Support
+    email: support@nova-audio.com
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+tags:
+  - name: Pages
+    description: Frontend page endpoints
+  - name: API
+    description: REST API endpoints for data retrieval
+
+paths:
+  /:
+    get:
+      tags:
+        - Pages
+      summary: Root endpoint - Redirects to home
+      description: Redirects users to the home page
+      responses:
+        '303':
+          description: Redirect to /home
+          headers:
+            Location:
+              schema:
+                type: string
+                example: /home
+
+  /home:
+    get:
+      tags:
+        - Pages
+      summary: Home page
+      description: Renders the hero section landing page with product showcase
+      responses:
+        '200':
+          description: HTML page successfully rendered
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /features:
+    get:
+      tags:
+        - Pages
+      summary: Features page
+      description: Displays detailed product features with dynamic content loading
+      responses:
+        '200':
+          description: HTML page successfully rendered
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /specs:
+    get:
+      tags:
+        - Pages
+      summary: Specifications page
+      description: Shows technical specifications organized by category
+      responses:
+        '200':
+          description: HTML page successfully rendered
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /contacts:
+    get:
+      tags:
+        - Pages
+      summary: Contact page
+      description: Renders contact form for customer inquiries
+      responses:
+        '200':
+          description: HTML page successfully rendered
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /api/features:
+    get:
+      tags:
+        - API
+      summary: Get product features
+      description: Returns a list of all product features with icons, titles, and descriptions
+      responses:
+        '200':
+          description: Successful response with features list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Feature'
+              example:
+                - icon: "🎵"
+                  title: "Hi-Res Audio"
+                  description: "Experience studio-quality sound with high-resolution audio support"
+                - icon: "🔇"
+                  title: "Active Noise Cancellation"
+                  description: "Block out the world with advanced ANC technology"
+
+  /api/specs:
+    get:
+      tags:
+        - API
+      summary: Get technical specifications
+      description: Returns product specifications organized by category
+      responses:
+        '200':
+          description: Successful response with specifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SpecCategory'
+              example:
+                - category: "Audio"
+                  items:
+                    - "Frequency Response: 20Hz - 20kHz"
+                    - "Impedance: 32 Ohm"
+                    - "Driver Size: 40mm"
+                - category: "Battery"
+                  items:
+                    - "Playtime: 40 hours"
+                    - "Charging: USB-C Fast Charge"
+
+  /api/contact:
+    post:
+      tags:
+        - API
+      summary: Submit contact form
+      description: Handles contact form submissions from customers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactForm'
+            example:
+              name: "John Doe"
+              email: "john.doe@example.com"
+              subject: "Product Inquiry"
+              message: "I would like to know more about the warranty options."
+      responses:
+        '200':
+          description: Form successfully submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactResponse'
+              example:
+                success: true
+                message: "Thank you for contacting us! We'll get back to you soon."
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Invalid request body"
+                code: 400
+        '405':
+          description: Method not allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Method not allowed"
+                code: 405
+
+components:
+  schemas:
+    Feature:
+      type: object
+      required:
+        - icon
+        - title
+        - description
+      properties:
+        icon:
+          type: string
+          description: Emoji or icon representing the feature
+          example: "🎵"
+        title:
+          type: string
+          description: Feature title
+          example: "Hi-Res Audio"
+        description:
+          type: string
+          description: Detailed feature description
+          example: "Experience studio-quality sound with high-resolution audio support"
+
+    SpecCategory:
+      type: object
+      required:
+        - category
+        - items
+      properties:
+        category:
+          type: string
+          description: Specification category name
+          example: "Audio"
+        items:
+          type: array
+          description: List of specifications in this category
+          items:
+            type: string
+          example:
+            - "Frequency Response: 20Hz - 20kHz"
+            - "Impedance: 32 Ohm"
+            - "Driver Size: 40mm"
+
+    ContactForm:
+      type: object
+      required:
+        - name
+        - email
+        - subject
+        - message
+      properties:
+        name:
+          type: string
+          description: Customer's full name
+          minLength: 2
+          maxLength: 100
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          description: Customer's email address
+          example: "john.doe@example.com"
+        subject:
+          type: string
+          description: Message subject
+          minLength: 5
+          maxLength: 200
+          example: "Product Inquiry"
+        message:
+          type: string
+          description: Message content
+          minLength: 10
+          maxLength: 2000
+          example: "I would like to know more about the warranty options."
+
+    ContactResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Indicates if the submission was successful
+          example: true
+        message:
+          type: string
+          description: Response message
+          example: "Thank you for contacting us! We'll get back to you soon."
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Invalid request body"
+        code:
+          type: integer
+          description: HTTP status code
+          example: 400
