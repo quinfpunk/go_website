@@ -1,8 +1,9 @@
 # Go website
 A website for the fictive NOVA headphones
 # Visualize website
+
+Install go (https://go.dev/doc/install)
 ```
-# install go see (https://go.dev/doc/install)
 go run main.go
 # on you browser look at the site: http://localhost:8080
 ```
