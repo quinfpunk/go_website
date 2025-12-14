@@ -10,9 +10,9 @@ go run main.go
 ```
 ## Frontend
 Install node (https://nodejs.org/en/download) 
-Install lucide react
+Install vite
 ```
-npm install lucid-react
+npm install vite
 ```
 Launch the frontend server
 ```
