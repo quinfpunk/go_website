@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,9 +6,41 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Headphones, Battery, Volume2, Mic, CloudRain, Sparkles, ChevronRight, Star, Send, CheckCircle2, AlertCircle, Mail, Phone, MapPin, Menu, X } from 'lucide-react';
+import { Headphones, Battery, Volume2, Mic, CloudRain, Sparkles, ChevronRight, Star, Send, CheckCircle2, AlertCircle, Mail, Phone, MapPin, Menu, X, Zap, Radio, Waves } from 'lucide-react';
 
 const API_URL = 'http://localhost:8080/api';
+
+// Custom hook for scroll animations
+const useScrollAnimation = () => {
+  const [isVisible, setIsVisible] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        }
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '0px 0px -100px 0px'
+      }
+    );
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => {
+      if (ref.current) {
+        observer.unobserve(ref.current);
+      }
+    };
+  }, []);
+
+  return [ref, isVisible];
+};
 
 // Navigation Component
 const Navigation = ({ currentPage, setCurrentPage }) => {
@@ -32,7 +64,6 @@ const Navigation = ({ currentPage, setCurrentPage }) => {
             </span>
           </div>
           
-          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
             {pages.map(page => (
               <button
@@ -47,17 +78,18 @@ const Navigation = ({ currentPage, setCurrentPage }) => {
             ))}
           </div>
 
-          <Button className="hidden md:block bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+          <Button
+	    onClick = {() => setCurrentPage('contact')}
+	    className="hidden md:block bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+	  >
             Buy Now
           </Button>
 
-          {/* Mobile Menu Button */}
           <button className="md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
 
-        {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden mt-4 pb-4 space-y-3">
             {pages.map(page => (
@@ -101,7 +133,6 @@ const HomePage = ({ setCurrentPage }) => {
     <div className="pt-32 pb-20 px-6">
       <div className="max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left Content */}
           <div className="space-y-8 relative z-10">
             <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/50 hover:bg-purple-500/30">
               <Sparkles className="w-3 h-3 mr-1" />
@@ -140,7 +171,6 @@ const HomePage = ({ setCurrentPage }) => {
               </Button>
             </div>
 
-            {/* Quick Features */}
             <div className="flex flex-wrap gap-4 pt-8">
               {quickFeatures.map((feature, index) => (
                 <div key={index} className="flex items-center gap-3 bg-white/5 backdrop-blur-sm rounded-full px-4 py-2 border border-white/10">
@@ -154,13 +184,12 @@ const HomePage = ({ setCurrentPage }) => {
             </div>
           </div>
 
-          {/* Right Content - Product Showcase */}
           <div className="relative lg:h-[600px] flex items-center justify-center">
             <div className="absolute inset-0 bg-gradient-radial from-purple-500/30 via-transparent to-transparent blur-3xl animate-pulse"></div>
             
             <Card className="relative w-full max-w-md bg-gradient-to-br from-white/5 to-white/0 border-white/10 backdrop-blur-xl hover:scale-105 transition-all duration-500 shadow-2xl shadow-purple-500/20"
               style={{
-                transform: `perspective(1000px) rotateY(${scrollY * 0.02}deg) rotateX(${scrollY * -0.01}deg)`
+                transform: `rotateY(${scrollY * 0.02}deg) rotateX(${scrollY * -0.01}deg)`
               }}>
               <CardContent className="p-8">
                 <div className="relative aspect-square mb-6">
@@ -211,8 +240,128 @@ const HomePage = ({ setCurrentPage }) => {
   );
 };
 
-// Features Page
-const FeaturesPage = () => {
+// Animated Feature Section Component
+const AnimatedFeature = ({ feature, index, animationType, setCurrentPage }) => {
+  const [ref, isVisible] = useScrollAnimation();
+  
+  const getAnimationClass = () => {
+    if (!isVisible) {
+      switch (animationType) {
+        case 'slideLeft':
+          return 'opacity-0 -translate-x-32';
+        case 'slideRight':
+          return 'opacity-0 translate-x-32';
+        case 'slideUp':
+          return 'opacity-0 translate-y-32';
+        case 'scale':
+          return 'opacity-0 scale-75';
+        case 'rotate':
+          return 'opacity-0 rotate-12 scale-90';
+        default:
+          return 'opacity-0';
+      }
+    }
+    return 'opacity-100 translate-x-0 translate-y-0 scale-100 rotate-0';
+  };
+
+  const iconMap = {
+    '🎵': Volume2,
+    '🔇': CloudRain,
+    '⚡': Zap,
+    '🎤': Mic,
+    '☁️': Waves,
+    '🌈': Sparkles,
+    '📡': Radio
+  };
+
+  const IconComponent = iconMap[feature.icon] || Sparkles;
+  const isEven = index % 2 === 0;
+
+  return (
+    <div
+      ref={ref}
+      className={`transition-all duration-1000 ease-out ${getAnimationClass()}`}
+      style={{ transitionDelay: `${index * 100}ms` }}
+    >
+      <div className={`grid lg:grid-cols-2 gap-12 items-center py-20 ${!isEven ? 'lg:flex-row-reverse' : ''}`}>
+        {/* Content Side */}
+        <div className={`space-y-6 ${!isEven ? 'lg:order-2' : ''}`}>
+          <div className="inline-flex items-center gap-3 bg-purple-500/10 backdrop-blur-sm rounded-full px-6 py-2 border border-purple-500/30">
+            <IconComponent className="w-5 h-5 text-purple-400" />
+            <span className="text-sm font-semibold text-purple-300">Feature {index + 1}</span>
+          </div>
+
+          <h2 className="text-5xl font-bold">
+            <span className="bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
+              {feature.title}
+            </span>
+          </h2>
+
+          <p className="text-xl text-white/70 leading-relaxed">
+            {feature.description}
+          </p>
+
+          <div className="space-y-4 pt-4">
+            {feature.details?.map((detail, idx) => (
+              <div key={idx} className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 mt-1">
+                  <CheckCircle2 className="w-4 h-4 text-purple-400" />
+                </div>
+                <span className="text-white/80">{detail}</span>
+              </div>
+            ))}
+          </div>
+
+          <Button 
+            onClick={() => setCurrentPage('specs')}
+            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 mt-6"
+          >
+            Learn More
+            <ChevronRight className="w-4 h-4 ml-2" />
+          </Button>
+        </div>
+
+        {/* Visual Side */}
+        <div className={`relative ${!isEven ? 'lg:order-1' : ''}`}>
+          <div className="relative aspect-square max-w-lg mx-auto">
+            {/* Animated background circles */}
+            <div className={`absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full blur-3xl ${isVisible ? 'animate-pulse' : ''}`}></div>
+            
+            <Card className="relative bg-gradient-to-br from-white/5 to-white/0 border-white/10 backdrop-blur-xl overflow-hidden h-full">
+              <CardContent className="p-12 flex items-center justify-center h-full">
+                <div className="relative w-full h-full flex items-center justify-center">
+                  {/* Large Icon */}
+                  <div className={`w-48 h-48 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center ${isVisible ? 'animate-bounce' : ''}`}
+                    style={{ animationDuration: '3s' }}>
+                    <div className="absolute inset-4 rounded-full bg-slate-950/80 backdrop-blur-sm"></div>
+                    <IconComponent className="w-24 h-24 text-white relative z-10" />
+                  </div>
+
+                  {/* Orbiting particles */}
+                  {[...Array(3)].map((_, i) => (
+                    <div
+                      key={i}
+                      className={`absolute w-4 h-4 rounded-full bg-purple-400 ${isVisible ? 'animate-ping' : ''}`}
+                      style={{
+                        top: `${30 + i * 20}%`,
+                        left: `${20 + i * 30}%`,
+                        animationDelay: `${i * 0.5}s`,
+                        animationDuration: '2s'
+                      }}
+                    ></div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Features Page with Scroll Animations
+const FeaturesPage = ({ setCurrentPage }) => {
   const [features, setFeatures] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -220,7 +369,11 @@ const FeaturesPage = () => {
     fetch(`${API_URL}/features`)
       .then(res => res.json())
       .then(data => {
-        setFeatures(data.data || []);
+        const enhancedFeatures = (data.data || []).map((feature, index) => ({
+          ...feature,
+          details: getFeatureDetails(index)
+        }));
+        setFeatures(enhancedFeatures);
         setLoading(false);
       })
       .catch(err => {
@@ -229,23 +382,38 @@ const FeaturesPage = () => {
       });
   }, []);
 
-  const iconMap = {
-    '🎵': Volume2,
-    '🔇': CloudRain,
-    '⚡': Battery,
-    '🎤': Mic,
-    '☁️': CloudRain,
-    '🌈': Sparkles
+  const getFeatureDetails = (index) => {
+    const allDetails = [
+      ['Studio-grade 40mm drivers', 'Support for Hi-Res audio codecs', 'Frequency response: 20Hz-40kHz'],
+      ['Adaptive noise cancellation', 'Ambient sound mode', 'Wind noise reduction'],
+      ['Fast charging support', 'Low battery indicator', 'Power-saving mode'],
+      ['Multiple microphones', 'Echo cancellation', 'Voice enhancement'],
+      ['Memory foam ear cushions', 'Adjustable headband', 'Lightweight design'],
+      ['3D audio positioning', 'Head tracking technology', 'Dolby Atmos support']
+    ];
+    return allDetails[index] || [];
   };
+
+  const animationTypes = ['slideLeft', 'slideRight', 'slideUp', 'scale', 'rotate', 'slideLeft'];
 
   return (
     <div className="pt-32 pb-20 px-6">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="text-5xl md:text-6xl font-bold mb-4">
-            Premium <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Features</span>
+        {/* Hero Section */}
+        <div className="text-center mb-20">
+          <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/50 mb-6">
+            <Sparkles className="w-3 h-3 mr-1" />
+            Premium Features
+          </Badge>
+          <h1 className="text-6xl md:text-7xl font-bold mb-6">
+            Innovation Meets
+            <span className="block bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+              Excellence
+            </span>
           </h1>
-          <p className="text-xl text-white/60">Discover what makes NOVA headphones extraordinary</p>
+          <p className="text-xl text-white/60 max-w-2xl mx-auto">
+            Discover the cutting-edge technology and thoughtful design that makes NOVA headphones extraordinary
+          </p>
         </div>
 
         {loading ? (
@@ -253,23 +421,48 @@ const FeaturesPage = () => {
             <div className="animate-spin w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full mx-auto"></div>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, index) => {
-              const IconComponent = iconMap[feature.icon] || Sparkles;
-              return (
-                <Card key={index} className="bg-white/5 border-white/10 backdrop-blur-xl hover:bg-white/10 hover:border-purple-500/50 transition-all duration-300 group">
-                  <CardContent className="p-6 space-y-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <IconComponent className="w-6 h-6 text-white" />
-                    </div>
-                    <h3 className="text-xl font-semibold">{feature.title}</h3>
-                    <p className="text-white/60 text-sm leading-relaxed">{feature.description}</p>
-                  </CardContent>
-                </Card>
-              );
-            })}
+          <div className="space-y-20">
+            {features.map((feature, index) => (
+              <AnimatedFeature
+                key={index}
+                feature={feature}
+                index={index}
+                animationType={animationTypes[index % animationTypes.length]}
+                setCurrentPage={setCurrentPage}
+              />
+            ))}
           </div>
         )}
+
+        {/* CTA Section */}
+        <div className="mt-32">
+          <Card className="bg-gradient-to-br from-purple-600 to-pink-600 border-0 shadow-2xl shadow-purple-500/50">
+            <CardContent className="p-12 text-center space-y-6">
+              <h2 className="text-4xl font-bold">Experience All Features</h2>
+              <p className="text-white/90 text-lg max-w-2xl mx-auto">
+                See how NOVA's premium features work together to deliver an unmatched audio experience
+              </p>
+              <div className="flex flex-wrap gap-4 justify-center">
+                <Button 
+                  size="lg" 
+                  onClick={() => setCurrentPage('contact')}
+                  className="bg-white text-purple-600 hover:bg-white/90"
+                >
+                  Order Now - $299
+                  <ChevronRight className="w-4 h-4 ml-2" />
+                </Button>
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  onClick={() => setCurrentPage('specs')}
+                  className="border-white text-black hover:bg-white/10"
+                >
+                  View Specifications
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
@@ -542,9 +735,12 @@ const ContactPage = () => {
 export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentPage]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white overflow-x-hidden">
-      {/* Background Effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 -left-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
         <div className="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
@@ -554,7 +750,7 @@ export default function App() {
 
       <main className="relative z-10">
         {currentPage === 'home' && <HomePage setCurrentPage={setCurrentPage} />}
-        {currentPage === 'features' && <FeaturesPage />}
+        {currentPage === 'features' && <FeaturesPage setCurrentPage={setCurrentPage} />}
         {currentPage === 'specs' && <SpecsPage />}
         {currentPage === 'contact' && <ContactPage />}
       </main>
